@@ -14,7 +14,13 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const { login } = useAuth();
+  const { login, user, isLoading: authLoading } = useAuth();
+
+  // Redirect if already authenticated
+  if (!authLoading && user) {
+    setLocation("/");
+    return null;
+  }
 
   const form = useForm<LoginData>({
     resolver: zodResolver(loginSchema),
@@ -32,7 +38,10 @@ export default function Login() {
         title: "Success",
         description: "Logged in successfully",
       });
-      setLocation("/");
+      // Small delay to ensure auth state is updated
+      setTimeout(() => {
+        setLocation("/");
+      }, 100);
     } catch (error: any) {
       toast({
         title: "Error",
