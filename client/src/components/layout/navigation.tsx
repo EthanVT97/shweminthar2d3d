@@ -21,20 +21,16 @@ export default function Navigation() {
 
           <div className="hidden md:block">
             <div className="ml-10 flex items-baseline space-x-4">
-              <Link href="/">
-                <a className={`px-3 py-2 rounded-md text-sm font-medium ${
+              <Link href="/" className={`px-3 py-2 rounded-md text-sm font-medium ${
                   isActive("/") ? "text-primary" : "text-gray-500 hover:text-gray-900"
                 }`}>
                   Betting
-                </a>
               </Link>
               {user?.isAdmin && (
-                <Link href="/admin">
-                  <a className={`px-3 py-2 rounded-md text-sm font-medium ${
+                <Link href="/admin" className={`px-3 py-2 rounded-md text-sm font-medium ${
                     isActive("/admin") ? "text-primary" : "text-gray-500 hover:text-gray-900"
                   }`}>
                     Admin
-                  </a>
                 </Link>
               )}
             </div>
@@ -64,13 +60,11 @@ export function MobileBottomNavigation() {
   return (
     <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t">
       <div className="grid grid-cols-4 gap-1">
-        <Link href="/">
-          <button className={`flex flex-col items-center py-2 ${
+        <Link href="/" className={`flex flex-col items-center py-2 ${
             isActive("/") ? "text-primary" : "text-gray-400"
           }`}>
             <Wallet className="text-xl" />
             <span className="text-xs mt-1">Bet</span>
-          </button>
         </Link>
 
         <button className="flex flex-col items-center py-2 text-gray-400">
@@ -89,16 +83,15 @@ export function MobileBottomNavigation() {
         </button>
 
         {user?.isAdmin && (
-          <Link href="/admin">
-            <button className={`flex flex-col items-center py-2 ${
+          <Link href="/admin" className={`flex flex-col items-center py-2 ${
               isActive("/admin") ? "text-primary" : "text-gray-400"
             }`}>
-              <Shield className="text-xl" />
-              <span className="text-xs mt-1">Admin</span>
-            </button>
+            <Shield className="text-xl" />
+            <span className="text-xs mt-1">Admin</span>
           </Link>
         )}
       </div>
     </div>
   );
 }
+```
