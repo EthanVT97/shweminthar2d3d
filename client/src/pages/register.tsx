@@ -9,12 +9,23 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
+import React from "react";
 
 export default function Register() {
   const [isLoading, setIsLoading] = useState(false);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const { register } = useAuth();
+  const { register, user } = useAuth();
+
+  React.useEffect(() => {
+    if (user) {
+      window.location.href = "/";
+    }
+  }, [user]);
+
+  if (user) {
+    return null;
+  }
 
   const form = useForm<RegisterData>({
     resolver: zodResolver(registerSchema),

@@ -18,7 +18,7 @@ export default function Navigation() {
               <h1 className="text-2xl font-bold text-primary cursor-pointer">ShweMinthar 2D3D</h1>
             </Link>
           </div>
-          
+
           <div className="hidden md:block">
             <div className="ml-10 flex items-baseline space-x-4">
               <Link href="/">
@@ -72,22 +72,22 @@ export function MobileBottomNavigation() {
             <span className="text-xs mt-1">Bet</span>
           </button>
         </Link>
-        
+
         <button className="flex flex-col items-center py-2 text-gray-400">
           <Wallet className="text-xl" />
           <span className="text-xs mt-1">Wallet</span>
         </button>
-        
+
         <button className="flex flex-col items-center py-2 text-gray-400">
           <History className="text-xl" />
           <span className="text-xs mt-1">History</span>
         </button>
-        
+
         <button className="flex flex-col items-center py-2 text-gray-400">
           <Users className="text-xl" />
           <span className="text-xs mt-1">Referral</span>
         </button>
-        
+
         {user?.isAdmin && (
           <Link href="/admin">
             <button className={`flex flex-col items-center py-2 ${

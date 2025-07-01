@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
+import React from "react";
 
 export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
@@ -16,9 +17,13 @@ export default function Login() {
   const { toast } = useToast();
   const { login, user, isLoading: authLoading } = useAuth();
 
-  // Redirect if already authenticated
-  if (!authLoading && user) {
-    setLocation("/");
+  React.useEffect(() => {
+    if (user) {
+      window.location.href = "/";
+    }
+  }, [user]);
+
+  if (user) {
     return null;
   }
 
