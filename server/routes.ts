@@ -1,11 +1,17 @@
 import type { Express } from "express";
+import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { loginSchema, registerSchema, insertBetSchema, insertResultSchema, insertTransactionSchema } from "@shared/schema";
+import { loginSchema, registerSchema, insertBetSchema, insertResultSchema, insertTransactionSchema, insertPaymentMethodSchema } from "@shared/schema";
 import { authenticateToken, requireAdmin, generateToken, type AuthRequest } from "./middleware/auth";
+import { upload } from "./middleware/upload";
 import jwt from "jsonwebtoken";
+import path from "path";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  
+  // Serve uploaded files
+  app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
   
   // Authentication routes
   app.post("/api/auth/register", async (req, res) => {
@@ -129,11 +135,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Transaction routes
-  app.post("/api/transactions", authenticateToken, async (req: AuthRequest, res) => {
+  app.post("/api/transactions", authenticateToken, upload.single('receipt'), async (req: AuthRequest, res) => {
     try {
+      const receiptUrl = req.file ? `/uploads/${req.file.filename}` : null;
+      
       const transactionData = insertTransactionSchema.parse({
         ...req.body,
-        userId: req.user.id
+        userId: req.user.id,
+        receiptUrl: receiptUrl
       });
       
       const transaction = await storage.createTransaction(transactionData);
@@ -186,7 +195,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/admin/transactions/:id", authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
     try {
       const { id } = req.params;
-      const { status } = req.body;
+      const { status, adminNotes } = req.body;
       
       if (!["approved", "rejected"].includes(status)) {
         return res.status(400).json({ message: "Invalid status" });
@@ -194,10 +203,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       await storage.updateTransactionStatus(parseInt(id), status);
       
+      // Update admin notes if provided
+      if (adminNotes) {
+        await storage.updateTransactionNotes(parseInt(id), adminNotes);
+      }
+      
       await storage.createAuditLog(
         req.user.id,
         "TRANSACTION_UPDATE",
-        `Updated transaction ${id} status to ${status}`
+        `Updated transaction ${id} status to ${status}${adminNotes ? ` with notes: ${adminNotes}` : ''}`
       );
       
       res.json({ message: "Transaction updated successfully" });
@@ -222,6 +236,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ bets });
     } catch (error: any) {
       res.status(500).json({ message: "Failed to fetch bets" });
+    }
+  });
+
+  // Payment methods routes
+  app.get("/api/payment-methods", async (req, res) => {
+    try {
+      const paymentMethods = await storage.getActivePaymentMethods();
+      res.json({ paymentMethods });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to fetch payment methods" });
+    }
+  });
+
+  app.post("/api/admin/payment-methods", authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+    try {
+      const paymentMethodData = insertPaymentMethodSchema.parse(req.body);
+      const paymentMethod = await storage.createPaymentMethod(paymentMethodData);
+      res.status(201).json({ message: "Payment method created successfully", paymentMethod });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message || "Failed to create payment method" });
+    }
+  });
+
+  app.get("/api/admin/payment-methods", authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+    try {
+      const paymentMethods = await storage.getAllPaymentMethods();
+      res.json({ paymentMethods });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to fetch payment methods" });
+    }
+  });
+
+  app.patch("/api/admin/payment-methods/:id", authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updateData = insertPaymentMethodSchema.partial().parse(req.body);
+      await storage.updatePaymentMethod(id, updateData);
+      res.json({ message: "Payment method updated successfully" });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message || "Failed to update payment method" });
+    }
+  });
+
+  app.delete("/api/admin/payment-methods/:id", authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deletePaymentMethod(id);
+      res.json({ message: "Payment method deleted successfully" });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to delete payment method" });
     }
   });
 

@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { users, bets, results, transactions, auditLogs, type User, type InsertUser, type Bet, type InsertBet, type Result, type InsertResult, type Transaction, type InsertTransaction, type AuditLog } from "@shared/schema";
+import { users, bets, results, transactions, auditLogs, paymentMethods, type User, type InsertUser, type Bet, type InsertBet, type Result, type InsertResult, type Transaction, type InsertTransaction, type AuditLog, type PaymentMethod, type InsertPaymentMethod } from "@shared/schema";
 import { eq, desc, and, gte, lte, sql } from "drizzle-orm";
 import bcrypt from "bcrypt";
 
@@ -30,6 +30,7 @@ export interface IStorage {
   getTransactionsByUserId(userId: number): Promise<Transaction[]>;
   getPendingTransactions(): Promise<Transaction[]>;
   updateTransactionStatus(transactionId: number, status: string): Promise<void>;
+  updateTransactionNotes(transactionId: number, adminNotes: string): Promise<void>;
 
   // Admin
   createAuditLog(adminId: number, action: string, details?: string): Promise<void>;
@@ -39,6 +40,13 @@ export interface IStorage {
   // Referral
   updateUserCommission(userId: number, commission: string): Promise<void>;
   getUserByReferralCode(code: string): Promise<User | undefined>;
+
+  // Payment Methods
+  createPaymentMethod(paymentMethod: InsertPaymentMethod): Promise<PaymentMethod>;
+  getActivePaymentMethods(): Promise<PaymentMethod[]>;
+  getAllPaymentMethods(): Promise<PaymentMethod[]>;
+  updatePaymentMethod(id: number, data: Partial<InsertPaymentMethod>): Promise<void>;
+  deletePaymentMethod(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -244,6 +252,10 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  async updateTransactionNotes(transactionId: number, adminNotes: string): Promise<void> {
+    await db.update(transactions).set({ adminNotes }).where(eq(transactions.id, transactionId));
+  }
+
   async createAuditLog(adminId: number, action: string, details?: string): Promise<void> {
     await db.insert(auditLogs).values({
       adminId,
@@ -275,6 +287,28 @@ export class DatabaseStorage implements IStorage {
       totalWinnings: totalWinningsResult.sum || '0',
       netProfit: (parseFloat(totalAmountResult.sum || '0') - parseFloat(totalWinningsResult.sum || '0')).toString(),
     };
+  }
+
+  // Payment Methods
+  async createPaymentMethod(paymentMethod: InsertPaymentMethod): Promise<PaymentMethod> {
+    const [result] = await db.insert(paymentMethods).values(paymentMethod).returning();
+    return result;
+  }
+
+  async getActivePaymentMethods(): Promise<PaymentMethod[]> {
+    return await db.select().from(paymentMethods).where(eq(paymentMethods.isActive, true));
+  }
+
+  async getAllPaymentMethods(): Promise<PaymentMethod[]> {
+    return await db.select().from(paymentMethods);
+  }
+
+  async updatePaymentMethod(id: number, data: Partial<InsertPaymentMethod>): Promise<void> {
+    await db.update(paymentMethods).set(data).where(eq(paymentMethods.id, id));
+  }
+
+  async deletePaymentMethod(id: number): Promise<void> {
+    await db.update(paymentMethods).set({ isActive: false }).where(eq(paymentMethods.id, id));
   }
 }
 
