@@ -3,7 +3,7 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { WalletSummary } from "@/components/dashboard/wallet-summary";
 import RecentBets from "@/components/dashboard/recent-bets";
-import { ReferralCard } from "@/components/dashboard/referral-card";
+import ReferralCard from "@/components/dashboard/referral-card";
 import { useAuth } from "@/hooks/use-auth";
 
 export default function Dashboard() {
