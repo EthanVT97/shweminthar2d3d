@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,7 +9,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import React from "react";
 
 export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
@@ -17,11 +16,11 @@ export default function Login() {
   const { toast } = useToast();
   const { login, user, isLoading: authLoading } = useAuth();
 
-  React.useEffect(() => {
-    if (user) {
+  useEffect(() => {
+    if (user && !authLoading) {
       window.location.href = "/";
     }
-  }, [user]);
+  }, [user, authLoading]);
 
   if (user) {
     return null;

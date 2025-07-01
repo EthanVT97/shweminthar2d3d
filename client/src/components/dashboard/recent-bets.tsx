@@ -90,7 +90,3 @@ export default function RecentBets() {
     </Card>
   );
 }
-
-export default RecentBets;
-  );
-}
