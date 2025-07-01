@@ -1,90 +1,79 @@
-import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import { Clock } from "lucide-react";
 
 export default function RecentBets() {
-  const { data: betsData, isLoading } = useQuery({
-    queryKey: ["/api/bets"],
-  });
-
-  const bets = betsData?.bets || [];
+  // Mock data for now - will be replaced with real data from API
+  const recentBets = [
+    {
+      id: 1,
+      numbers: "123",
+      type: "2D",
+      amount: 1000,
+      status: "pending",
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: 2,
+      numbers: "456",
+      type: "3D",
+      amount: 2000,
+      status: "won",
+      createdAt: new Date(Date.now() - 86400000).toISOString(),
+    },
+  ];
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case "won":
-        return "bg-green-100 text-green-800";
+        return "bg-green-500";
       case "lost":
-        return "bg-red-100 text-red-800";
+        return "bg-red-500";
+      case "pending":
+        return "bg-yellow-500";
       default:
-        return "bg-yellow-100 text-yellow-800";
+        return "bg-gray-500";
     }
   };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case "won":
-        return "Won";
-      case "lost":
-        return "Lost";
-      default:
-        return "Pending";
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Bets</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-4">Loading...</div>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
-    <Card>
+    <Card className="bg-white/10 backdrop-blur-sm border-white/20">
       <CardHeader>
-        <CardTitle>Recent Bets</CardTitle>
+        <CardTitle className="text-white flex items-center">
+          <Clock className="h-5 w-5 mr-2" />
+          Recent Bets
+        </CardTitle>
       </CardHeader>
-      <CardContent>
-        {bets.length === 0 ? (
-          <div className="text-center text-gray-500 py-4">
-            No bets placed yet
-          </div>
+      <CardContent className="text-white">
+        {recentBets.length === 0 ? (
+          <p className="text-center text-white/60 py-8">No bets placed yet</p>
         ) : (
-          <div className="space-y-3">
-            {bets.slice(0, 5).map((bet: any) => (
-              <div key={bet.id} className="flex justify-between items-center py-2 border-b last:border-b-0">
-                <div>
-                  <div className="font-medium">{bet.type} - {bet.number}</div>
-                  <div className="text-sm text-gray-500">₹{bet.amount} bet</div>
+          <div className="space-y-4">
+            {recentBets.map((bet) => (
+              <div
+                key={bet.id}
+                className="flex items-center justify-between p-3 rounded-lg bg-white/5"
+              >
+                <div className="flex items-center space-x-3">
+                  <Badge variant="outline" className="text-white border-white/20">
+                    {bet.type}
+                  </Badge>
+                  <div>
+                    <div className="font-semibold">{bet.numbers}</div>
+                    <div className="text-sm text-white/60">
+                      {new Date(bet.createdAt).toLocaleDateString()}
+                    </div>
+                  </div>
                 </div>
                 <div className="text-right">
-                  {bet.status === "won" ? (
-                    <div className="text-green-600 font-medium">+₹{bet.potentialPayout}</div>
-                  ) : bet.status === "lost" ? (
-                    <div className="text-red-600 font-medium">-₹{bet.amount}</div>
-                  ) : (
-                    <div className="text-yellow-600 font-medium">Pending</div>
-                  )}
+                  <div className="font-semibold">₹{bet.amount}</div>
                   <Badge className={getStatusColor(bet.status)}>
-                    {getStatusText(bet.status)}
+                    {bet.status}
                   </Badge>
                 </div>
               </div>
             ))}
           </div>
-        )}
-        
-        {bets.length > 5 && (
-          <Button variant="ghost" className="w-full mt-4 text-primary">
-            View All Bets <ArrowRight className="h-4 w-4 ml-1" />
-          </Button>
         )}
       </CardContent>
     </Card>

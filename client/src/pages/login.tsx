@@ -1,108 +1,120 @@
-import { useState, useEffect } from "react";
+
+import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { loginSchema, type LoginData } from "@shared/schema";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function Login() {
-  const [isLoading, setIsLoading] = useState(false);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const { login, user, isLoading: authLoading } = useAuth();
-
-  useEffect(() => {
-    if (user && !authLoading) {
-      window.location.href = "/";
-    }
-  }, [user, authLoading]);
-
-  if (user) {
-    return null;
-  }
-
-  const form = useForm<LoginData>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      username: "",
-      password: "",
-    },
+  const { user, login } = useAuth();
+  const [formData, setFormData] = useState({
+    username: "",
+    password: "",
   });
 
-  const onSubmit = async (data: LoginData) => {
-    setIsLoading(true);
-    try {
-      await login(data.username, data.password);
+  // Handle redirect after login using useEffect to avoid state update during render
+  useEffect(() => {
+    if (user) {
+      setLocation("/dashboard");
+    }
+  }, [user, setLocation]);
+
+  const loginMutation = useMutation({
+    mutationFn: async (data: typeof formData) => {
+      return apiRequest("POST", "/api/auth/login", data);
+    },
+    onSuccess: (data) => {
+      login(data.user);
       toast({
         title: "Success",
-        description: "Logged in successfully",
+        description: "Login successful",
       });
-      // Small delay to ensure auth state is updated
-      setTimeout(() => {
-        setLocation("/");
-      }, 100);
-    } catch (error: any) {
+    },
+    onError: (error: any) => {
       toast({
         title: "Error",
         description: error.message || "Login failed",
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
-    }
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    loginMutation.mutate(formData);
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold text-primary">ShweMinthar 2D3D</CardTitle>
-          <CardDescription>Sign in to your account</CardDescription>
+    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md bg-white/10 backdrop-blur-sm border-white/20">
+        <CardHeader>
+          <CardTitle className="text-2xl text-center text-white">
+            Welcome Back
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="username" className="text-white">
+                Username
+              </Label>
+              <Input
+                id="username"
                 name="username"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Username</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter your username" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                type="text"
+                value={formData.username}
+                onChange={handleChange}
+                required
+                className="bg-white/10 border-white/20 text-white placeholder:text-white/60"
+                placeholder="Enter your username"
               />
-              <FormField
-                control={form.control}
+            </div>
+            <div>
+              <Label htmlFor="password" className="text-white">
+                Password
+              </Label>
+              <Input
+                id="password"
                 name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password</FormLabel>
-                    <FormControl>
-                      <Input type="password" placeholder="Enter your password" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                type="password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                className="bg-white/10 border-white/20 text-white placeholder:text-white/60"
+                placeholder="Enter your password"
               />
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Signing in..." : "Sign In"}
-              </Button>
-            </form>
-          </Form>
-          <div className="mt-4 text-center text-sm">
-            Don't have an account?{" "}
-            <Link href="/register" className="text-primary hover:underline">
-              Sign up
-            </Link>
+            </div>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={loginMutation.isPending}
+            >
+              {loginMutation.isPending ? "Signing in..." : "Sign In"}
+            </Button>
+          </form>
+          <div className="mt-4 text-center">
+            <p className="text-white/60">
+              Don't have an account?{" "}
+              <Link href="/register">
+                <span className="text-white hover:underline cursor-pointer">
+                  Register here
+                </span>
+              </Link>
+            </p>
           </div>
         </CardContent>
       </Card>

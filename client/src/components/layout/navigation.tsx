@@ -1,96 +1,58 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { User, Wallet, History, Users, Shield } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { Home, Gamepad2, User, LogOut, Settings } from "lucide-react";
 
 export default function Navigation() {
-  const { user, logout } = useAuth();
   const [location] = useLocation();
+  const { user, logout } = useAuth();
 
-  const isActive = (path: string) => location === path;
+  const navItems = [
+    { href: "/dashboard", icon: Home, label: "Dashboard" },
+    { href: "/betting", icon: Gamepad2, label: "Betting" },
+    { href: "/profile", icon: User, label: "Profile" },
+  ];
+
+  if (user?.role === "admin") {
+    navItems.push({ href: "/admin", icon: Settings, label: "Admin" });
+  }
 
   return (
-    <nav className="bg-white shadow-sm border-b">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          <div className="flex items-center">
-            <Link href="/">
-              <h1 className="text-2xl font-bold text-primary cursor-pointer">ShweMinthar 2D3D</h1>
-            </Link>
-          </div>
-
-          <div className="hidden md:block">
-            <div className="ml-10 flex items-baseline space-x-4">
-              <Link href="/" className={`px-3 py-2 rounded-md text-sm font-medium ${
-                  isActive("/") ? "text-primary" : "text-gray-500 hover:text-gray-900"
-                }`}>
-                  Betting
-              </Link>
-              {user?.isAdmin && (
-                <Link href="/admin" className={`px-3 py-2 rounded-md text-sm font-medium ${
-                    isActive("/admin") ? "text-primary" : "text-gray-500 hover:text-gray-900"
-                  }`}>
-                    Admin
-                </Link>
-              )}
+    <nav className="bg-white/10 backdrop-blur-sm border-b border-white/20">
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-between h-16">
+          <Link href="/dashboard">
+            <div className="text-xl font-bold text-white cursor-pointer">
+              ShweMinthar 2D3D
             </div>
-          </div>
+          </Link>
 
           <div className="flex items-center space-x-4">
-            <div className="text-sm text-gray-600">
-              Balance: <span className="font-semibold text-green-600">₹{user?.balance || "0"}</span>
-            </div>
-            <Button onClick={logout} variant="outline" size="sm">
-              <User className="h-4 w-4 mr-2" />
+            {navItems.map((item) => (
+              <Link key={item.href} href={item.href}>
+                <Button
+                  variant={location === item.href ? "secondary" : "ghost"}
+                  size="sm"
+                  className="text-white hover:bg-white/20"
+                >
+                  <item.icon className="h-4 w-4 mr-2" />
+                  {item.label}
+                </Button>
+              </Link>
+            ))}
+
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={logout}
+              className="text-white hover:bg-white/20"
+            >
+              <LogOut className="h-4 w-4 mr-2" />
               Logout
             </Button>
           </div>
         </div>
       </div>
     </nav>
-  );
-}
-
-export function MobileBottomNavigation() {
-  const { user } = useAuth();
-  const [location] = useLocation();
-
-  const isActive = (path: string) => location === path;
-
-  return (
-    <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t">
-      <div className="grid grid-cols-4 gap-1">
-        <Link href="/" className={`flex flex-col items-center py-2 ${
-            isActive("/") ? "text-primary" : "text-gray-400"
-          }`}>
-            <Wallet className="text-xl" />
-            <span className="text-xs mt-1">Bet</span>
-        </Link>
-
-        <button className="flex flex-col items-center py-2 text-gray-400">
-          <Wallet className="text-xl" />
-          <span className="text-xs mt-1">Wallet</span>
-        </button>
-
-        <button className="flex flex-col items-center py-2 text-gray-400">
-          <History className="text-xl" />
-          <span className="text-xs mt-1">History</span>
-        </button>
-
-        <button className="flex flex-col items-center py-2 text-gray-400">
-          <Users className="text-xl" />
-          <span className="text-xs mt-1">Referral</span>
-        </button>
-
-        {user?.isAdmin && (
-          <Link href="/admin" className={`flex flex-col items-center py-2 ${
-              isActive("/admin") ? "text-primary" : "text-gray-400"
-            }`}>
-            <Shield className="text-xl" />
-            <span className="text-xs mt-1">Admin</span>
-          </Link>
-        )}
-      </div>
-    </div>
   );
 }
