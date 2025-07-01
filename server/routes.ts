@@ -155,7 +155,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin routes
   app.post("/api/admin/results", authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
     try {
-      const resultData = insertResultSchema.parse(req.body);
+      const { date, ...rest } = req.body;
+      const resultData = insertResultSchema.parse({
+        ...rest,
+        date: new Date(date)
+      });
       const result = await storage.createResult(resultData);
       
       await storage.createAuditLog(

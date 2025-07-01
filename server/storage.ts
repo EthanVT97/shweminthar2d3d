@@ -112,7 +112,6 @@ export class DatabaseStorage implements IStorage {
         userId: bet.userId,
         type: "bet",
         amount: `-${bet.amount}`,
-        status: "completed",
         description: `${bet.type} bet on ${bet.number}`,
       });
     }
@@ -177,7 +176,6 @@ export class DatabaseStorage implements IStorage {
             userId: bet.userId,
             type: "payout",
             amount: bet.potentialPayout,
-            status: "completed",
             description: `Winning payout for ${bet.type} bet on ${bet.number}`,
           });
         }

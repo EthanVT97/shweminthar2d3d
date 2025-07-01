@@ -2,7 +2,7 @@ import { pgTable, text, serial, integer, boolean, timestamp, decimal, varchar } 
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-export const users = pgTable("users", {
+export const users = pgTable("app_users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
@@ -15,7 +15,7 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const bets = pgTable("bets", {
+export const bets = pgTable("app_bets", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id).notNull(),
   type: varchar("type", { length: 2 }).notNull(), // "2D" or "3D"
@@ -27,7 +27,7 @@ export const bets = pgTable("bets", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const results = pgTable("results", {
+export const results = pgTable("app_results", {
   id: serial("id").primaryKey(),
   date: timestamp("date").notNull(),
   result2d: text("result_2d"),
@@ -35,7 +35,7 @@ export const results = pgTable("results", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const transactions = pgTable("transactions", {
+export const transactions = pgTable("app_transactions", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id).notNull(),
   type: varchar("type", { length: 20 }).notNull(), // "deposit", "withdrawal", "bet", "payout", "commission"
@@ -45,7 +45,7 @@ export const transactions = pgTable("transactions", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const auditLogs = pgTable("audit_logs", {
+export const auditLogs = pgTable("app_audit_logs", {
   id: serial("id").primaryKey(),
   adminId: integer("admin_id").references(() => users.id).notNull(),
   action: text("action").notNull(),
@@ -60,12 +60,14 @@ export const insertUserSchema = createInsertSchema(users).omit({
   commission: true,
   isAdmin: true,
   createdAt: true,
+  referralCode: true,
 });
 
 export const insertBetSchema = createInsertSchema(bets).omit({
   id: true,
   status: true,
   createdAt: true,
+  potentialPayout: true,
 });
 
 export const insertResultSchema = createInsertSchema(results).omit({
